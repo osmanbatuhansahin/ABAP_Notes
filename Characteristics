@@ -1,0 +1,9 @@
+  DATA: lv_objek TYPE cuobn.
+      MOVE ls_data-matnr TO lv_objek.
+      SELECT ausp~atwrt
+        FROM cabn
+        INNER JOIN ausp ON cabn~atinn EQ ausp~atinn
+                    AND @lv_objek EQ ausp~objek
+        INNER JOIN mara ON @ls_data-matnr EQ mara~matnr
+        WHERE cabn~atnam EQ 'ZSEKACIKLAMA'
+        INTO @DATA(lv_chr).
