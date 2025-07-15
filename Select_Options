@@ -1,0 +1,51 @@
+"Zorunlu alan
+SELECT-OPTIONS: s_banfn  FOR eban-banfn OBLIGATORY
+*****************
+"Variant
+SELECTION-SCREEN BEGIN OF BLOCK variant  WITH FRAME TITLE TEXT-var.
+PARAMETERS : pf_vari LIKE disvariant-variant MODIF ID mc4.
+SELECTION-SCREEN END OF BLOCK variant.
+lo_layo->set_initial_layout( pf_vari ).
+    alv_layout(
+      EXPORTING
+        if_name = if_name
+        io_alv  = <fo_alv>
+        pf_vari = pf_vari ).
+*****************************
+"SO Kısıt Koyma
+    SELECTION-SCREEN: BEGIN OF SCREEN 0101 AS SUBSCREEN.
+    SELECT-OPTIONS: s_matnr2 FOR mara-matnr NO INTERVALS.
+    SELECTION-SCREEN: END OF SCREEN 0101.
+
+    DATA restrict TYPE sscr_restrict.
+* Auxiliary objects for filling RESTRICT
+    DATA : optlist TYPE sscr_opt_list,
+           ass     TYPE sscr_ass.
+    optlist-name = 'OBJECTKEY1'.
+    optlist-options-eq = 'X'.
+    APPEND optlist TO restrict-opt_list_tab.
+    ass-kind = 'S'.
+    ass-name = 'S_MATNR2'.
+    ass-sg_main = 'I'.
+    ass-sg_addy = space.
+    ass-op_main = 'OBJECTKEY1'.
+    APPEND ass TO restrict-ass_tab.
+
+    CALL FUNCTION 'SELECT_OPTIONS_RESTRICT'
+      EXPORTING
+        restriction            = restrict
+                                 EXCEPTIONS
+                                 ?nbs! p;
+        too_late               = 1
+        repeated               = 2
+        selopt_without_options = 3
+        selopt_without_signs   = 4
+        invalid_sign           = 5
+        empty_option_list      = 6
+        invalid_kind           = 7
+        repeated_kind_a        = 8
+        OTHERS                 = 9.
+    IF sy-subrc NE 0.
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDIF.
