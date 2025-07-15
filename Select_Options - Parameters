@@ -49,3 +49,11 @@ lo_layo->set_initial_layout( pf_vari ).
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
               WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ENDIF.
+*************************************************
+ Parametre görünmesin 
+p_angdt TYPE vbak-angdt NO-DISPLAY.
+*********************************************************
+başka programa parametre gönder.
+SUBMIT zabc WITH p_vbeln = gs_data-vbeln
+            AND RETURN.
+
