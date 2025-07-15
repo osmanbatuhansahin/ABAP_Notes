@@ -1,0 +1,17 @@
+"Itabdan Range oluşturma
+  DATA: lr_ekorg TYPE RANGE OF ekorg,
+        lt_ekorg TYPE TABLE OF ekorg.
+
+      LOOP AT lt_ekorg INTO DATA(ls_ekorg).
+        APPEND VALUE #( sign = 'I'
+                        option = 'EQ'
+                        low = ls_ekorg ) TO lr_ekorg.
+      ENDLOOP.
+
+"Range inline decleration
+        DATA(lr_act1) = VALUE lr_act_type( sign = 'I' option = 'EQ'
+          ( low = 'Z0000005' )
+          ( low = 'Z0000006' )
+          ( low = 'Z0000007' )
+          ( low = 'Z0000008' )
+          ( low = 'Z0000009' ) ).
