@@ -1,0 +1,14 @@
+Select Case
+           CASE
+            WHEN vbkd_i~ihrez_e IS NULL
+            THEN vbkd_h~ihrez_e
+            ELSE vbkd_i~ihrez_e
+           END AS ihrez_e,
+
+           CASE
+            WHEN vbkd_i~posex_e EQ '000000'
+            THEN vbkd_h~posex_e
+            ELSE vbkd_i~posex_e
+           END AS posex_e,
+      FROM vepo
+Alanın veri tipi kontrol edilmeli, boş alanlar bazen 0 gelebiliyor.
