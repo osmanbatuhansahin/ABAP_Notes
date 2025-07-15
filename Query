@@ -12,3 +12,7 @@ Select Case
            END AS posex_e,
       FROM vepo
 Alanın veri tipi kontrol edilmeli, boş alanlar bazen 0 gelebiliyor.
+
+********************************************
+Sıfır silme
+LEFT JOIN ausp ON ( LTRIM( ausp~objek, '0' ) EQ  mara~matnr )
