@@ -1,0 +1,8 @@
+    LOOP AT s_matnr INTO gs_matnr.
+      APPEND gs_matnr+3(20) TO gt_matnr.
+      CLEAR: gs_matnr.
+    ENDLOOP.
+
+SHIFT lv_lifnr_temp LEFT DELETING LEADING '0'. 
+
+UNPACK abc TO def. 
