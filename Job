@@ -1,0 +1,29 @@
+"Job içinde submit
+      TRY .
+          CALL METHOD cl_salv_bs_runtime_info=>get
+            RECEIVING
+              value = ls_runtime_info.
+        CATCH cx_salv_bs_sc_runtime_info .
+
+      ENDTRY.
+      IF NOT ( ls_runtime_info-display EQ abap_false AND
+         ls_runtime_info-data EQ abap_false ).
+
+        DATA(lv_exist) = abap_true.
+
+      ENDIF.
+      IF  lv_exist EQ abap_false. 
+        cl_salv_bs_runtime_info=>clear_all( ).
+      ENDIF.
+    IF cl_gui_alv_grid=>offline( ) IS INITIAL.
+      CREATE OBJECT p_cont_obj
+        EXPORTING
+          container_name = p_cont_name.
+      CREATE OBJECT p_grid_item
+        EXPORTING
+          i_parent = p_cont_obj.
+    ELSE.
+      CREATE OBJECT p_grid_item
+        EXPORTING
+          i_parent = lr_doc.
+    ENDIF.
