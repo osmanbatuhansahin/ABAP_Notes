@@ -1,2 +1,4 @@
 Sıradan numara almak için SNRO Tcodeundan her sistemde ayrı bakım yapıyoruz. Request alınmıyor.
 SNRO Function module 'NUMBER_GET_NEXT'
+*************************
+sy-cprog -> program ismini veriyor.
