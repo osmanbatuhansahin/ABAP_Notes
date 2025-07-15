@@ -26,3 +26,9 @@ barcode = barcode.replace(/XE/g, eot)
 
 this.rawValue = barcode
 
+*****************************************
+Content içinde header gibi bir yapı oluşturmak
+place : on page
+overflow : go to page
+overflow leader: 
+
