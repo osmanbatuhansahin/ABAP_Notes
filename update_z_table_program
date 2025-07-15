@@ -1,0 +1,259 @@
+REPORT Z_UPDATE.
+
+INCLUDE Z_UPDATE_TOP.
+INCLUDE Z_UPDATE_SEL.
+INCLUDE Z_UPDATE_CLS.
+INCLUDE Z_UPDATE_O01.
+INCLUDE Z_UPDATE_I01.
+
+INITIALIZATION.
+  go_main = NEW lcl_main( ).
+
+START-OF-SELECTION.
+  go_main->check_selection( ).  
+***************************************
+Include  Z_UPDATE_TOP
+
+TABLES: Z_T_UPDATE.
+
+CLASS lcl_main DEFINITION DEFERRED.
+  
+DATA : go_main TYPE REF TO lcl_main.
+
+DATA: go_cont TYPE REF TO cl_gui_custom_container,
+      go_alv  TYPE REF TO cl_gui_alv_grid.
+DATA: gt_fcat    TYPE lvc_t_fcat,
+      gs_fcat    TYPE LINE OF lvc_t_fcat,
+      gs_layout  TYPE lvc_s_layo,
+      gv_error   TYPE c,
+      gt_exclude TYPE ui_functions.
+
+DATA: gt_update      TYPE TABLE OF Z_S_update ,
+      gt_update_del TYPE TABLE OF Z_S_update ,
+      gs_update     TYPE Z_S_update ,
+      gs_save      TYPE Z_T_update .  
+****************************************
+Include   Z_UPDATE_SEL
+  
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-007.
+PARAMETERS: p_vkorg TYPE vkorg OBLIGATORY.
+SELECT-OPTIONS :s_kunnr FOR kna1-kunnr,
+                s_matnr FOR mara-matnr.
+SELECTION-SCREEN END OF BLOCK b1.
+*************************  
+Include   Z_UPDATE_CLS
+CLASS lcl_main DEFINITION.
+  PUBLIC SECTION.
+    METHODS :
+      check_selection,
+      start_of_selection,
+      get_data,
+      display_alv,
+      save,
+      handle_data_changed
+            FOR EVENT data_changed OF cl_gui_alv_grid
+        IMPORTING
+            er_data_changed
+            e_onf4
+            e_onf4_before
+            e_onf4_after
+            e_ucomm,
+      perform_semantic_checks
+        IMPORTING
+          pr_data_changed TYPE REF TO cl_alv_changed_data_protocol.
+ENDCLASS.
+
+CLASS lcl_main IMPLEMENTATION.
+
+  METHOD check_selection.
+    AUTHORITY-CHECK OBJECT 'V_VBAK_VKO'
+      ID 'VKORG' FIELD p_vkorg
+      ID 'VTWEG' DUMMY
+      ID 'SPART' DUMMY
+      ID 'ACTVT' FIELD '03'.
+    IF sy-subrc <> 0.
+      MESSAGE TEXT-003 TYPE 'S' DISPLAY LIKE 'W'.
+      LEAVE LIST-PROCESSING.
+    ELSE.
+    me->start_of_selection( ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD start_of_selection.
+    me->get_data( ).
+    CALL SCREEN 100.
+  ENDMETHOD.  
+  METHOD get_data.
+  SELECT............. INTO TABLE @gt_update
+  METHOD get_data.
+  CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
+        CHANGING
+        ct_fieldcat            = gt_fcat 
+  
+      LOOP AT gt_fcat ASSIGNING FIELD-SYMBOL(<fs_fcat>).
+      CASE <fs_fcat>-fieldname.
+        WHEN 'xxx'.
+          <fs_fcat>-no_out = 'X'.
+        WHEN 'xxx'.
+          <fs_fcat>-edit ='X'.
+      ENDCASE.
+    ENDLOOP.
+"Eski kayıtlarda sütunun editable olmaması ama yeni ekleneceklerde editlenebilmesi için
+    LOOP AT gt_update ASSIGNING FIELD-SYMBOL(<fs_list>).
+      REFRESH <fs_list>-celltab.
+      ls_styl-fieldname = 'XXX'.  
+      ls_styl-style = cl_gui_alv_grid=>mc_style_disabled.
+      INSERT ls_styl INTO TABLE  <fs_list>-celltab.
+    ENDLOOP.
+ENDMETHOD.
+
+  METHOD display_alv.
+    IF go_cont IS INITIAL.
+      CREATE OBJECT go_cont
+        EXPORTING
+          container_name = 'CONT'.
+    ENDIF.
+    IF go_alv IS INITIAL.
+      CREATE OBJECT go_alv
+        EXPORTING
+          i_parent = go_cont.
+    ENDIF.
+
+    gs_layout = VALUE #( cwidth_opt = abap_true
+                         zebra      = abap_true
+                         sel_mode   = 'A'
+                         stylefname = 'CELLTAB'
+                       ).
+
+    gt_exclude = VALUE #( ( cl_gui_alv_grid=>mc_fc_loc_copy_row )
+                      ( cl_gui_alv_grid=>mc_fc_loc_append_row )
+                      ( cl_gui_alv_grid=>mc_fc_loc_move_row )
+                      ( cl_gui_alv_grid=>mc_fc_loc_copy )
+                      ( cl_gui_alv_grid=>mc_fc_loc_cut )
+                      ( cl_gui_alv_grid=>mc_fc_loc_paste )
+                      ( cl_gui_alv_grid=>mc_fc_loc_paste_new_row )
+                      ( cl_gui_alv_grid=>mc_fc_loc_undo )
+                      ( cl_gui_alv_grid=>mc_fc_graph )
+                      ( cl_gui_alv_grid=>mc_fc_info )
+                      ( cl_gui_alv_grid=>mc_fc_refresh )
+                      ( cl_gui_alv_grid=>mc_fc_detail ) ) .
+      SET HANDLER go_main->handle_data_changed FOR go_alv.
+
+    CALL METHOD go_alv->set_toolbar_interactive.
+    CALL METHOD go_alv->set_table_for_first_display
+      EXPORTING
+*       is_variant           = gs_variant
+        is_layout            = gs_layout
+        i_save               = 'A'
+*       i_structure_name     =
+        it_toolbar_excluding = gt_exclude
+      CHANGING
+        it_outtab            = gt_update
+        it_fieldcatalog      = gt_fcat.
+
+    CALL METHOD go_alv->register_edit_event
+      EXPORTING
+        i_event_id = cl_gui_alv_grid=>mc_evt_modified.    " Event ID
+  ENDMETHOD.
+  
+    METHOD save.
+    DATA : ls_styl TYPE lvc_s_styl.
+    IF gt_update_del IS NOT INITIAL.
+      LOOP AT gt_update_del INTO gs_mensei.
+        DELETE FROM z_t_update WHERE vkorg = gs_mensei-vkorg AND.....
+      ENDLOOP.
+      CLEAR: gt_update_del.
+    ENDIF.
+    LOOP AT gt_update ASSIGNING FIELD-SYMBOL(<fs_update>).
+      IF <fs_update>-vkorg IS INITIAL.
+        <fs_update>-vkorg = p_vkorg.
+      ENDIF.
+      MOVE-CORRESPONDING <fs_update> TO gs_save.
+      IF gs_save-vkorg IS NOT INITIAL.
+        MODIFY z_t_update FROM gs_save.
+        COMMIT WORK.
+        IF sy-subrc = 0.
+          MESSAGE TEXT-008 TYPE 'S'.
+          REFRESH <fs_update>-celltab.
+          ls_styl-fieldname = 'XXX'.
+          ls_styl-style = cl_gui_alv_grid=>mc_style_disabled.
+          INSERT ls_styl INTO TABLE  <fs_mensei>-celltab.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD handle_data_changed.
+    IF er_data_changed->mt_deleted_rows IS NOT INITIAL.
+      LOOP AT er_data_changed->mt_deleted_rows INTO DATA(gs_deleted).
+        READ TABLE gt_update ASSIGNING FIELD-SYMBOL(<fs_update>) INDEX gs_deleted-row_id.
+        APPEND <fs_update> TO gt_update_del.
+      ENDLOOP.
+      CLEAR: er_data_changed->mt_deleted_rows.
+    ELSEIF er_data_changed->mt_good_cells IS NOT INITIAL.
+      me->perform_semantic_checks( pr_data_changed = er_data_changed ).
+      IF gv_error EQ 'X'.
+        CALL METHOD er_data_changed->display_protocol.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+   METHOD perform_semantic_checks.
+    DATA : lv_kunnr  TYPE kunnr.
+
+    LOOP AT pr_data_changed->mt_good_cells INTO DATA(ls_good).
+      CASE ls_good-fieldname.
+        WHEN 'KUNNR'.
+          CLEAR lv_kunnr.
+          CALL METHOD pr_data_changed->get_cell_value
+            EXPORTING
+              i_row_id    = ls_good-row_id
+              i_fieldname = 'KUNNR'
+            IMPORTING
+              e_value     = lv_kunnr.
+          IF lv_kunnr IS NOT INITIAL.
+
+            SELECT SINGLE @abap_true
+              FROM kna1
+              INTO @DATA(lv_exists)
+              WHERE kunnr = @lv_kunnr.
+            IF sy-subrc NE 0.
+              CALL METHOD pr_data_changed->add_protocol_entry
+                EXPORTING
+                  i_msgid     = '0K'
+                  i_msgno     = '000'
+                  i_msgty     = 'E'
+                  i_msgv1     = TEXT-001
+                  i_fieldname = ls_good-fieldname
+                  i_row_id    = ls_good-row_id.
+              gv_error = abap_true.
+            ENDIF.
+          ENDIF.
+  ENDCASE.
+  ****************************************
+  Include          Z_UPDATE_O01
+MODULE status_0100 OUTPUT.
+ SET PF-STATUS 'STATUS'.
+ SET TITLEBAR 'TITLE1'.
+ go_main->display_alv( ).
+ENDMODULE.
+******************************************  
+  Include          Z_UPDATE_I01
+  MODULE user_command_0100 INPUT.
+  CASE sy-ucomm.
+    WHEN 'EXIT'
+      OR 'UP'
+      OR 'CANCEL'
+      OR 'BACK'
+      OR 'CNCL'.
+      LEAVE TO SCREEN 0.
+    WHEN 'SAVE'.
+      go_main->save( ).
+  ENDCASE.
+
+ENDMODULE.
+
+  
+  
+
+  
