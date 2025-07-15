@@ -1,0 +1,28 @@
+JAVASCRIPT
+data.MAIN.ITEM.GT_ITEM::ready:form - (JavaScript, client)
+if ( data.MAIN.ITEM.GT_ITEM2.SUBSET.TEXT.Seri_Termin != null ) {
+	this.presence = "hidden";
+}
+if( data.MAIN.Table1.FooterRowWaluta.waerk.rawValue == "EUR" )
+  {
+	this.presence = "visible";
+  }
+!!!!!!!!!!!Fieldları isimlendirmeyi unutma!!!!!!!!!!!!
+
+Barkoda ayraçlar eklemek
+data.Page1.Table1.Row1.#subform[0].Table2.Row1.Table3.Row1.#subform[2].BARCODE01::ready:form - (JavaScript, client)
+
+var mh = "\u005B\u0029\u003E"
+var gs = "\u001D"
+var rs = "\u001E"
+var eot = "\u0004"
+
+var barcode = this.rawValue
+
+barcode = barcode.replace(/XM/g, mh)
+barcode = barcode.replace(/XG/g, gs)
+barcode = barcode.replace(/XR/g, rs)
+barcode = barcode.replace(/XE/g, eot)
+
+this.rawValue = barcode
+
