@@ -1,0 +1,37 @@
+Renklendirme
+            ms_cellcolor      TYPE lvc_s_scol,
+            mo_columns        TYPE REF TO cl_salv_columns_table,
+            mo_column         TYPE REF TO cl_salv_column,
+            lv_index          TYPE i.
+        CALL METHOD me->mo_alv->get_columns
+      RECEIVING
+        value = mo_columns.
+
+    TRY.
+        CALL METHOD mo_columns->set_color_column
+          EXPORTING
+            value = 'CELL_COLOR'.
+      CATCH cx_salv_data_error.
+    ENDTRY.
+
+    LOOP AT mt_list ASSIGNING FIELD-SYMBOL(<fs_list>).
+      lv_index = sy-tabix.
+      IF <fs_list>-sschk EQ TEXT-015.
+         ms_cellcolor-color-col   = 6.
+         ms_cellcolor-color-int   = 1.
+         ms_cellcolor-color-inv   = 0.
+         APPEND ms_cellcolor TO <fs_list>-cell_color.
+      ENDIF.
+      MODIFY mt_list FROM <fs_list> INDEX lv_index TRANSPORTING cell_color.
+    ENDLOOP.
+    CLEAR: <fs_list>.
+
+Functions
+  lo_functions = lo_alv->get_functions( ).
+*  lo_functions->set_default( 'X' ). 
+  lo_functions->set_all( 'X' ).
+  lo_functions->set_export_spreadsheet( 'X' ).
+  lo_functions->set_export_localfile( 'X' ).
+  lo_functions->set_export_xml( 'X' ).
+  lo_functions->set_view_excel( abap_false ).
+  lo_functions->set_export_wordprocessor( 'X' ).
