@@ -1,0 +1,12 @@
+add recipient cc
+                  TRY .
+                      recipient = cl_cam_address_bcs=>create_internet_address( wa_receivers-email ).
+                      "Add recipient to send request
+                      CALL METHOD send_email->add_recipient
+                        EXPORTING
+                          i_recipient = recipient
+                          i_copy      = 'X'.
+
+                    CATCH cx_bcs  INTO lo_bcs_exception. .
+
+                  ENDTRY.
