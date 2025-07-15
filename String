@@ -2,7 +2,12 @@
       APPEND gs_matnr+3(20) TO gt_matnr.
       CLEAR: gs_matnr.
     ENDLOOP.
-
+*********
+sıfır silme
 SHIFT lv_lifnr_temp LEFT DELETING LEADING '0'. 
-
+*************
 UNPACK abc TO def. 
+**************
+tarih formatı
+WRITE ls_likp-wadat TO es_data-plansevktarihi  DD/MM/YYYY
+***********
